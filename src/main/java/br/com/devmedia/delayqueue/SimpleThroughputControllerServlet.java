@@ -39,6 +39,8 @@ public class SimpleThroughputControllerServlet extends HttpServlet {
 						while ((de = queue.take()) != null) {
 							Calendar cal = Calendar.getInstance();
 							System.out.println("Entrando: " + cal.getTime() + "--> " + de.getName());
+							if (queue.size() == 1) {
+								delay.set(0);							}
 						}
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block

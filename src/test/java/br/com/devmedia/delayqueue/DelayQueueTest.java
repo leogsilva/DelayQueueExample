@@ -1,9 +1,13 @@
 package br.com.devmedia.delayqueue;
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jetty.client.Address;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpExchange;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -44,41 +48,17 @@ public class DelayQueueTest {
 		handlerList.setHandlers(new Handler[] { contextHandler, resourceHandler });
 		server.setHandler(handlerList);
 		server.start();
-		
-//		CamelContext camelContext = new DefaultCamelContext();
-//		camelContext.addRoutes(new RouteBuilder() {
-//
-//			@Override
-//			public void configure() throws Exception {
-//				from(
-//						"jetty:http://0.0.0.0:5678/service1")
-//						.process(new Processor() {
-//
-//							@Override
-//							public void process(Exchange exchange)
-//									throws Exception {
-//								String id = exchange.getIn().getHeader("id",String.class);
-//								exchange.getOut().setBody("<html><body>Ola "+ id + "</body></html>");
-//							}
-//
-//						});
-//			}
-//
-//		});
-//		camelContext.start();
-		// DelayQueue<DelayedEvent> queue = new DelayQueue<DelayedEvent>();
-		// for(int i = 1 ; i <= 4; i++) {
-		// DelayedEvent e = new DelayedEvent("task" + i, (long)i,
-		// TimeUnit.SECONDS);
-		// queue.offer(e);
-		// }
-		// DelayedEvent evt = null;
-		// while ((evt = queue.poll(5, TimeUnit.SECONDS)) != null) {
-		// System.out.println("Found: " + evt.getName());
-		// }
-		while (true) {
-			Thread.sleep(1000);
-		}
-//		camelContext.stop();
+
+		HttpClient client = new HttpClient();
+		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+		client.start();
+		HttpExchange exchange = new HttpExchange();
+		exchange.setMethod("GET");
+		exchange.setURL("http://localhost:5678/service?id=4321");
+		client.send(exchange);
+		int state = exchange.waitForDone();
+		Assert.assertEquals(HttpExchange.STATUS_COMPLETED, state);
+		Thread.sleep(10000);
+		server.stop();
 	}
 }
